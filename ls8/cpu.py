@@ -2,11 +2,13 @@
 
 import sys
 
-ADD = 0b10100000  # Add the value in two registers and store the result in registerA.
-HLT = 0b00000001  # Halt the CPU (and exit the emulator).
-LDI = 0b10000010  # Set the value of a register to an integer.
-MUL = 0b10100010  # Multiply the values in two registers together and store the result in registerA.
-PRN = 0b01000111  # Print numeric value stored in the given register.
+ADD = 0b10100000
+HLT = 0b00000001
+LDI = 0b10000010
+MUL = 0b10100010
+POP = 0b01000110
+PRN = 0b01000111
+PUSH = 0b01000101
 
 
 class CPU:
@@ -16,7 +18,7 @@ class CPU:
         """Construct a new CPU."""
         self.reg = [0] * 8
         self.reg[7] = 0xF4
-        self.pc = 0
+        self.pc = 0  # program counter
         self.ram = [0] * 256
         self.halted = False
 
@@ -38,13 +40,13 @@ class CPU:
         except FileNotFoundError:
             print('File not found.')
 
-    def alu(self, instruction, operand_a, operand_b):
+    def alu(self, instruction, reg_a, reg_b):
         """ALU operations."""
 
         if instruction == ADD:
-            self.reg[operand_a] += self.reg[operand_b]
+            self.reg[reg_a] += self.reg[reg_b]
         elif instruction == MUL:
-            self.reg[operand_a] *= self.reg[operand_b]
+            self.reg[reg_a] *= self.reg[reg_b]
         # elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
@@ -105,8 +107,16 @@ class CPU:
         elif instruction == MUL:
             self.alu(instruction, operand_a, operand_b)
             self.pc += pc_increment
+        elif instruction == POP:
+            self.reg[operand_a] = self.ram_read(self.reg[7])
+            self.reg[7] += 1
+            self.pc += pc_increment
         elif instruction == PRN:
             print(self.reg[operand_a])
+            self.pc += pc_increment
+        elif instruction == PUSH:
+            self.reg[7] -= 1
+            self.ram_write(self.reg[7], self.reg[operand_a])
             self.pc += pc_increment
         else:
             print(f'Unkown instruction {instruction}')
