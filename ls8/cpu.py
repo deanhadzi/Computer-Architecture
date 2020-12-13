@@ -3,12 +3,14 @@
 import sys
 
 ADD = 0b10100000
+CALL = 0b01010000
 HLT = 0b00000001
 LDI = 0b10000010
 MUL = 0b10100010
 POP = 0b01000110
 PRN = 0b01000111
 PUSH = 0b01000101
+RET = 0b00010001
 
 
 class CPU:
@@ -99,6 +101,10 @@ class CPU:
         if instruction == ADD:
             self.alu(instruction, operand_a, operand_b)
             self.pc += pc_increment
+        elif instruction == CALL:
+            self.reg[7] -= 1
+            self.ram_write(self.reg[7], self.pc + 2)
+            self.pc = self.reg[operand_a]
         elif instruction == HLT:
             self.halted = True
         elif instruction == LDI:
@@ -118,5 +124,7 @@ class CPU:
             self.reg[7] -= 1
             self.ram_write(self.reg[7], self.reg[operand_a])
             self.pc += pc_increment
+        elif instruction == RET:
+            self.pc = self.ram_read(self.reg[7])
         else:
             print(f'Unkown instruction {instruction}')
